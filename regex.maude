@@ -1,0 +1,91 @@
+fmod SIGMA is
+ sort Sigma .
+ sort SigmaStar .
+ subsort Sigma < SigmaStar .
+
+ op epsilon : -> Sigma [ctor] .
+ op 0 : -> Sigma [ctor].
+ op 1 : -> Sigma [ctor].
+ op __ : Sigma SigmaStar -> SigmaStar [ctor].
+
+endfm
+
+fmod REGEX is
+ inc SIGMA .
+ sort Regex .
+ subsort Sigma < Regex .
+
+ op emp : -> Regex [ctor].
+ op _._ : Regex Regex -> Regex [ctor assoc prec 1] .
+ op _+_ : Regex Regex -> Regex [ctor assoc comm prec 2] .
+ op (_)* : Regex -> Regex [ctor].
+endfm
+
+mod MEMBER is
+ inc REGEX .
+ sort Member .
+ op member : Regex SigmaStar -> Member .
+ vars S S' : SigmaStar .
+ var a : Sigma .
+ vars R T P : Regex .
+
+--- Definiendo las propiedades.
+
+ eq R + emp = R . --- 9.3
+ 
+ eq R + R = R . --- 9.4
+ 
+ eq R . ( T . P ) = ( R . T ) . P . --- 9.5
+
+ eq R . epsilon = epsilon . R . --- 9.6
+
+ eq epsilon . R = R . --- 9.6
+
+ eq R . ( T + P ) = R . T + R . P . --- 9.7
+
+ eq ( R + T ) . P = R . P + T . P . --- 9.8
+
+ eq R . emp = emp . R . --- 9.9
+
+ eq emp . R = R . --- 9.9
+
+ eq epsilon + R . ( R ) * = ( R ) * . --- 9.10
+
+ eq epsilon + ( R ) * . R = ( R ) * . --- 9 . 11
+
+ eq member(a,a) = member(emp,epsilon) .
+
+ ---casos que eliminan un simbolo de sigma
+
+ eq member(a . R, a S) = member(R,S) .
+
+ eq member(a . R, a) = member(R,epsilon) .
+
+ eq member(a , a S) = member(emp,S) .
+
+
+ ---caso que escoge una de las dos expresiones en el or
+
+ crl member(R + T,S) => member(emp,epsilon) if member(R,S) => member(emp,epsilon) .
+
+ crl member((R + T) . P,S) => member(P,S') if member(R,S) => member(emp,S') .
+
+ ---caso cuando (R)* no consume nada
+
+ rl member( (R)* , S) => member(emp ,S) .
+
+ rl member( (R)* . T , S) => member(T ,S) .
+
+ ---caso cuando (R)* hace un paso con R
+
+ rl member( (R)* , S) => member(R . (R)* ,S) .
+
+ rl member( (R)* . T , S) => member(R . (R)* . T,S) .
+
+endm
+
+---red epsilon + R . ( R ) * .
+
+---search in MEMBER : member( (0 + 0) . 1  , 0 1) =>* member(emp,epsilon) .
+
+---show search graph .
